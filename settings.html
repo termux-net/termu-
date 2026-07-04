@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Paramètres - Omega AI</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f0f2f5; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .plan { background: white; padding: 20px; margin: 15px 0; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .plan h3 { color: #667eea; }
+        button { padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .back { display: inline-block; margin-bottom: 20px; color: #667eea; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="chat.html" class="back">← Retour au chat</a>
+        <h1>Devenir VIP</h1>
+        
+        <div class="plan">
+            <h3>VIP 1 - 1000 FCFA / Semaine</h3>
+            <p>✅ 100 messages/jour</p>
+            <button onclick="requestVip(1)">Choisir</button>
+        </div>
+
+        <div class="plan">
+            <h3>VIP 2 - 2500 FCFA / Semaine</h3>
+            <p>✅ 150 messages/jour</p>
+            <p>✅ Historique sauvegardé</p>
+            <button onclick="requestVip(2)">Choisir</button>
+        </div>
+
+        <div class="plan">
+            <h3>VIP 3 - 5000 FCFA / Semaine</h3>
+            <p>✅ Messages illimités</p>
+            <p>✅ Historique sauvegardé</p>
+            <p>✅ Support prioritaire</p>
+            <button onclick="requestVip(3)">Choisir</button>
+        </div>
+    </div>
+
+    <script>
+        async function requestVip(level) {
+            const formData = new FormData();
+            formData.append('plan_level', level);
+            
+            const res = await fetch('/api/payment/request', { method: 'POST', body: formData, credentials: 'include' });
+            const data = await res.json();
+            
+            alert(`Faites un transfert de ${data.amount} FCFA via Mobile Money ou methode indique  au +24174569963, puis envoyez la capture sur WhatsApp.\n\nLien WhatsApp: ${data.whatsapp}`);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Omega AI</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f0f2f5; }
+        .section { background: white; padding: 20px; margin: 20px 0; border-radius: 10px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+        button { padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        input, textarea { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 3px; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Panel Administrateur</h1>
+    
+    <div class="section">
+        <h2>Utilisateurs en attente</h2>
+        <div id="pending-users"></div>
+    </div>
+
+    <div class="section">
+        <h2>Paiements en attente</h2>
+        <div id="pending-payments"></div>
+    </div>
+
+    <div class="section">
+        <h2>Tous les utilisateurs</h2>
+        <table id="users-table">
+            <thead><tr><th>Téléphone</th><th>VIP</th><th>Action</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>Clés API</h2>
+        <div id="keys-list"></div>
+        <input type="text" id="new-key" placeholder="Nouvelle clé Gemini">
+        <button onclick="addKey()">Ajouter</button>
+    </div>
+
+    <div class="section">
+        <h2>Prompt Système</h2>
+        <textarea id="system-prompt" rows="5"></textarea>
+        <button onclick="updatePrompt()">Mettre à jour</button>
+    </div>
+
+    <script>
+        async function loadPendingUsers() {
+            const res = await fetch('/admin/pending-users', { credentials: 'include' });
+            const users = await res.json();
+            const container = document.getElementById('pending-users');
+            container.innerHTML = '';
+            users.forEach(u => {
+                container.innerHTML += `<div>${u.phone} (IP: ${u.ip}) <button onclick="generateCode('${u.phone}')">Générer Code</button></div>`;
+            });
+        }
+
+        async function generateCode(phone) {
+            const formData = new FormData();
+            formData.append('phone_number', phone);
+            const res = await fetch('/admin/generate-code', { method: 'POST', body: formData, credentials: 'include' });
+            const data = await res.json();
+            alert(`Code: ${data.code}\nEnvoyez-le via WhatsApp à ${phone}`);
+        }
+
+        async function loadPendingPayments() {
+            const res = await fetch('/admin/payments', { credentials: 'include' });
+            const payments = await res.json();
+            const container = document.getElementById('pending-payments');
+            container.innerHTML = '';
+            payments.forEach(p => {
+                container.innerHTML += `<div>${p.phone} - VIP ${p.level} (${p.amount} FCFA) <a href="${p.proof}" target="_blank">Voir preuve</a> <button onclick="validatePayment(${p.id})">Valider</button></div>`;
+            });
+        }
+
+        async function validatePayment(id) {
+            await fetch(`/admin/validate-payment/${id}`, { method: 'POST', credentials: 'include' });
+            alert('VIP activé');
+            loadPendingPayments();
+        }
+
+        async function loadUsers() {
+            const res = await fetch('/admin/users', { credentials: 'include' });
+            const users = await res.json();
+            const tbody = document.querySelector('#users-table tbody');
+            tbody.innerHTML = '';
+            users.forEach(u => {
+                tbody.innerHTML += `<tr><td>${u.phone}</td><td>VIP ${u.vip}</td><td><button onclick="setVip(${u.id}, 1)">VIP1</button> <button onclick="setVip(${u.id}, 2)">VIP2</button> <button onclick="setVip(${u.id}, 3)">VIP3</button></td></tr>`;
+            });
+        }
+
+        async function setVip(id, level) {
+            const formData = new FormData();
+            formData.append('level', level);
+            await fetch(`/admin/set-vip/${id}`, { method: 'POST', body: formData, credentials: 'include' });
+            loadUsers();
+        }
+
+        async function loadKeys() {
+            const res = await fetch('/admin/keys', { credentials: 'include' });
+            const keys = await res.json();
+            const container = document.getElementById('keys-list');
+            container.innerHTML = keys.map(k => `<div>Clé #${k.id}: ${k.count}/5 req/min</div>`).join('');
+        }
+
+        async function addKey() {
+            const key = document.getElementById('new-key').value;
+            const formData = new FormData();
+            formData.append('key_value', key);
+            await fetch('/admin/add-key', { method: 'POST', body: formData, credentials: 'include' });
+            loadKeys();
+        }
+
+        async function loadPrompt() {
+            const res = await fetch('/admin/prompt', { credentials: 'include' });
+            const data = await res.json();
+            document.getElementById('system-prompt').value = data.prompt;
+        }
+
+        async function updatePrompt() {
+            const prompt = document.getElementById('system-prompt').value;
+            const formData = new FormData();
+            formData.append('new_prompt', prompt);
+            await fetch('/admin/update-prompt', { method: 'POST', body: formData, credentials: 'include' });
+            alert('Prompt mis à jour');
+        }
+
+        loadPendingUsers();
+        loadPendingPayments();
+        loadUsers();
+        loadKeys();
+        loadPrompt();
+    </script>
+</body>
+</html>

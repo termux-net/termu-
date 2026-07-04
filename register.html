@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Inscription - Omega AI</title>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f0f2f5; }
+        .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 350px; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #5568d3; }
+        .info { background: #fff3cd; padding: 10px; border-radius: 5px; margin-top: 15px; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Inscription</h2>
+        <input type="tel" id="phone" placeholder="+225 XX XX XX XX">
+        <button onclick="register()">Demander un accès</button>
+        <div class="info">
+            ⚠️ Un administrateur vous contactera sur WhatsApp pour valider votre compte.
+        </div>
+        <p style="text-align: center; margin-top: 20px;"><a href="login.html">Déjà un compte ?</a></p>
+    </div>
+
+    <script>
+        async function register() {
+            const phone = document.getElementById('phone').value;
+            const formData = new FormData();
+            formData.append('phone_number', phone);
+            
+            const res = await fetch('/register/request', { method: 'POST', body: formData });
+            const data = await res.json();
+            
+            if (res.ok) {
+                alert(data.msg);
+                window.location.href = 'login.html';
+            } else {
+                alert(data.detail || 'Erreur');
+            }
+        }
+    </script>
+</body>
+</html>
